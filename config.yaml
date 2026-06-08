@@ -1,0 +1,21 @@
+# ROCm Inference Benchmark Configuration
+
+model:
+  name: "meta-llama/Llama-3.1-8B"
+  dtype: "float16"
+  max_model_len: 4096
+  trust_remote_code: true
+
+hardware:
+  tensor_parallel: 1
+  gpu_memory_utilization: 0.90
+
+benchmark:
+  num_prompts: 100
+  max_tokens: 256
+  temperature: 0.0
+  warmup_prompts: 10
+
+output:
+  dir: "results"
+  format: ["csv", "json"]
