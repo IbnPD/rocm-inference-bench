@@ -1,0 +1,37 @@
+# Dockerfile.rocm — ROCm 6.2 + vLLM 0.6.x for AMD Instinct MI300X
+# Usage:
+#   docker build -f Dockerfile.rocm -t rocm-vllm:mi300x .
+#   docker run --rm -it --device=/dev/kfd --device=/dev/dri \
+#     --group-add video --cap-add=SYS_PTRACE --security-opt seccomp=unconfined \
+#     -v $HOME/.cache/huggingface:/root/.cache/huggingface \
+#     rocm-vllm:mi300x python3 /workspace/bench.py --model meta-llama/Llama-3.1-8B --tp 1
+
+FROM rocm/dev-ubuntu-22.04:6.2.4-complete
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+
+# ROCm runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.10 python3.10-venv python3.10-dev python3-pip \
+    git wget curl ca-certificates build-essential \
+    libnuma1 libnuma-dev \
+    && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /workspace
+
+# vLLM with ROCm backend — install from prebuilt wheel
+RUN pip3 install --upgrade pip wheel setuptools \
+    && pip3 install --index-url https://download.pytorch.org/whl/rocm6.2 torch==2.5.1 \
+    && pip3 install "vllm>=0.6.4,<0.7" \
+    && pip3 install -r requirements.txt
+
+# Verify ROCm visibility
+RUN /opt/rocm/bin/rocminfo | head -20 || echo "[WARN] rocminfo not present"
+
+COPY bench.py config.yaml ./
+COPY bench/ ./bench/
+
+CMD ["python3", "bench.py", "--suite", "quick"]

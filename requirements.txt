@@ -1,5 +1,13 @@
-vllm>=0.6.0
-torch>=2.4.0
+# Core inference
+vllm>=0.6.4,<0.7
+torch>=2.5.1
+# ROCm-aware transformers
+transformers>=4.45.0
+tokenizers>=0.20.0
+# Datasets
+datasets>=3.0.0
+huggingface-hub>=0.25.0
+# Numerics + viz
 numpy>=1.24.0
 pandas>=2.0.0
 matplotlib>=3.7.0
